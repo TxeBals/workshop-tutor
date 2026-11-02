@@ -1,0 +1,23 @@
+# Evaluation tasks on playground/. Each task runs on a clean COPY.
+# check.command: run in the workdir after the agent (exit 0 = pass)
+# check.hidden:  hidden tests copied into the workdir ONLY for grading
+# check.answer_contains: the final answer must contain all these strings (case- and accent-insensitive)
+- id: fix_rounding
+  prompt: "Some invoices with VAT come out one cent short. Find the cause and fix it. The tests must pass."
+  check: {command: "python -m pytest -q tests/test_amounts.py"}
+
+- id: fix_due_date
+  prompt: "If an invoice's due date falls on a Sunday it is not moved to Monday. Fix it."
+  check: {command: "python -m pytest -q tests/test_dates.py"}
+
+- id: green_suite
+  prompt: "Make the whole test suite pass (python -m pytest -q) without modifying the tests."
+  check: {command: "python -m pytest -q"}
+
+- id: feature_discount
+  prompt: "Add an optional `discount` parameter to Invoice.total() (a percentage 0-100, default 0) that is applied to the subtotal BEFORE VAT. If it is out of range, raise ValueError. Add a test."
+  check: {command: "python -m pytest -q tests/test_discount_hidden.py", hidden: {"evals/hidden/test_discount.py": "tests/test_discount_hidden.py"}}
+
+- id: vat_question
+  prompt: "Without modifying anything: in which file and function is the VAT amount calculated, and which rates does it accept?"
+  check: {answer_contains: ["amounts.py", "calculate_vat", "21", "10", "4"], forbid_changes: true}

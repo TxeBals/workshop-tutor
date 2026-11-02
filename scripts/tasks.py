@@ -1,0 +1,63 @@
+"""Workshop tasks, cross-platform (including Windows without make).
+
+    python scripts/tasks.py setup              # dependencies + .env
+    python scripts/tasks.py test 03            # lab 03 tests against YOUR code
+    python scripts/tasks.py test               # all of them
+    python scripts/tasks.py solutions          # tests against the reference solution
+    python scripts/tasks.py catchup 05         # solves labs 01-04
+    python scripts/tasks.py demo               # the SOLUTION's CLI on playground/ (tutor)
+    python scripts/tasks.py evals [args…]      # evals with your agent
+    python scripts/tasks.py reset              # puts playground/ back as it was (git)
+    python scripts/tasks.py starters           # (tutor) regenerates forja/ from solutions/
+"""
+from __future__ import annotations
+
+import glob
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+PY = sys.executable
+
+
+def sh(*args: str, env: dict | None = None, cwd: Path = ROOT) -> int:
+    print("»", " ".join(args))
+    return subprocess.call(list(args), cwd=cwd, env={**os.environ, **(env or {})})
+
+
+def main() -> int:
+    if len(sys.argv) < 2:
+        print(__doc__)
+        return 0
+    cmd, rest = sys.argv[1], sys.argv[2:]
+    if cmd == "setup":
+        rc = sh(PY, "-m", "pip", "install", "-e", ".[dev]")
+        if not (ROOT / ".env").exists():
+            shutil.copy(ROOT / ".env.example", ROOT / ".env")
+            print("created .env (review it)")
+        return rc
+    if cmd == "test":
+        files = sorted(glob.glob(str(ROOT / "tests" / f"test_l{rest[0].zfill(2)}_*.py"))) if rest else ["tests"]
+        return sh(PY, "-m", "pytest", *files)
+    if cmd == "solutions":
+        return sh(PY, "-m", "pytest", "tests", env={"FORJA_SOLUTIONS": "1"})
+    if cmd == "catchup":
+        return sh(PY, "scripts/catchup.py", *rest)
+    if cmd == "starters":
+        return sh(PY, "scripts/make_starters.py")
+    if cmd == "demo":
+        return sh(PY, "-m", "forja", "--cwd", str(ROOT / "playground"), *rest, env={"PYTHONPATH": str(ROOT / "solutions")})
+    if cmd == "evals":
+        return sh(PY, "evals/run_evals.py", *rest)
+    if cmd == "reset":
+        sh("git", "checkout", "--", "playground")
+        return sh("git", "clean", "-fdq", "playground")
+    print(f"unknown task: {cmd}\n{__doc__}")
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
