@@ -34,7 +34,7 @@ STUBS: dict[str, list[tuple[str, str, str]]] = {
     ],
     "shell.py": [
         ("head_tail", "04.1", "If it fits, unchanged. Otherwise: 1/4 of the limit from the start + 3/4 from the end, with a note saying how many characters are omitted in the middle."),
-        ("make_shell_tool.bash", "04.2", "subprocess.run(command, shell=True, cwd=ws.root, capture_output, text, timeout (1..600), env=clean_env(), stdin=DEVNULL). TimeoutExpired -> 'TIMEOUT after Ns'. Return ToolOutput('exit_code=N\\n' + head_tail(stdout + [stderr]), {'exit_code': N})."),
+        ("make_shell_tool.bash", "04.2", "subprocess.run(command, shell=True, cwd=ws.root, capture_output, text, encoding='utf-8', errors='replace', timeout (1..600), env=clean_env(), stdin=DEVNULL). TimeoutExpired -> 'TIMEOUT after Ns'. Return ToolOutput('exit_code=N\\n' + head_tail(stdout + [stderr]), {'exit_code': N})."),
     ],
     "permissions.py": [
         ("rule_matches", "04.3", "name, pattern = parse_rule(rule). The tool name is matched with fnmatchcase (allows 'mcp__issues__*'). No pattern: match. With a pattern: fnmatchcase(tool.subject(args), pattern); for bash normalise whitespace (' '.join(split()))."),
@@ -62,7 +62,7 @@ STUBS: dict[str, list[tuple[str, str, str]]] = {
     ],
     "subagents.py": [
         ("load_profiles", "09.1", "Start with dict(BUILTIN). For each *.md in the folder (if it exists): FRONTMATTER.match; yaml.safe_load the frontmatter; require name and description; tools may be a list or 'a, b'; max_steps optional. The body is the system prompt."),
-        ("make_task_tool.task", "09.2", "Look up the profile (ValueError if missing). sub_tools = parent_tools.subset(the profile's tools, without 'task'). Agent(llm, sub_tools, execute=execute, max_steps, events=events_factory(name) or Events()). NEW messages: [profile system, user prompt]. Return '[subagent …] ' + the answer."),
+        ("make_task_tool.task", "09.2", "Look up the profile (ValueError if missing). sub_tools = parent_tools.subset(the profile's tools, without 'task'). Wrap execute so a call to a tool NOT in sub_tools returns ToolResult(ok=False, 'ERROR: tool ... is not available to subagent ...') instead of running. Agent(llm, sub_tools, execute=<wrapper>, max_steps, events=events_factory(name) or Events()). NEW messages: [profile system, user prompt]. Return '[subagent …] ' + the answer."),
     ],
     "hooks.py": [
         ("HookRunner.matching", "10.1", "From self.config[event]: no matcher -> always; with a matcher -> only if there is a tool_name and re.fullmatch(matcher, tool_name)."),

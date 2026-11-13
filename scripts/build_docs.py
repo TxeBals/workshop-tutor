@@ -10,6 +10,98 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from labs_content import CAPSTONE, GLOSSARY, LABS  # noqa: E402
 
+
+def _load_guides(lang: str) -> dict:
+    import importlib
+    g: dict = {}
+    for part in "abc":
+        try:
+            g.update(importlib.import_module(f"guides.{lang}_{part}").GUIDE)
+        except ModuleNotFoundError:
+            pass
+    return g
+
+
+GUIDES = {"es": _load_guides("es"), "en": _load_guides("en")}
+G = {
+    "es": dict(before="Antes de empezar", order="Paso a paso", contract="Qué debe hacer", steps="Pasos", gotchas="Cuidado con",
+               hint="Pista", skeleton="Pista 3 · esqueleto", check="Comprueba solo este TODO", setup="Setup paso a paso",
+               try_it="Pruébalo en tu agente", trouble="Si algo falla", symptom="Síntoma", fix="Causa → solución",
+               done="Has terminado cuando", milestone="Hito del día 1", capstone="Proyecto final paso a paso"),
+    "en": dict(before="Before you start", order="Step by step", contract="What it must do", steps="Steps", gotchas="Watch out for",
+               hint="Hint", skeleton="Hint 3 · skeleton", check="Check just this TODO", setup="Setup step by step",
+               try_it="Try it in your agent", trouble="If something goes wrong", symptom="Symptom", fix="Cause → fix",
+               done="You're done when", milestone="Day-1 milestone", capstone="Final project step by step"),
+}
+
+
+CAP_LABELS = {"es": dict(where="Dónde", template="Plantilla", demo="Demo de 3 minutos", done="Has terminado cuando"),
+              "en": dict(where="Where", template="Template", demo="3-minute demo", done="You're done when")}
+
+
+def _pipe(x: str) -> str:
+    return x.replace("|", "\\|")
+
+
+def _list(items, numbered=False):
+    return [f"{n}. {x}" if numbered else f"- {x}" for n, x in enumerate(items, 1)]
+
+
+def guide_md(lab_id: str, lang: str, h: str, part: str) -> list[str]:
+    g = GUIDES[lang].get(lab_id)
+    if not g:
+        return []
+    t = G[lang]
+    out: list[str] = []
+    if part == "top":
+        if g.get("before"):
+            out += [f"{h}# {t['before']}", *_list(g["before"]), ""]
+        if g.get("steps_noTODO"):
+            out += [f"{h}# {t['setup']}", *_list(g["steps_noTODO"], True), ""]
+        if g.get("todos"):
+            out += [f"{h}# {t['order']}", g.get("order", ""), ""]
+            for tid, td in g["todos"].items():
+                out += [f"{h}## TODO {tid} · {td['where']}", "", f"**{t['contract']}:** {td['contract']}", "",
+                        f"**{t['steps']}:**", *_list(td.get("steps", []), True), ""]
+                if td.get("gotchas"):
+                    out += [f"**{t['gotchas']}:**", *_list(td["gotchas"]), ""]
+                for n, hint in enumerate(td.get("hints", []), 1):
+                    label = t["skeleton"] if n == 3 else f"{t['hint']} {n}"
+                    out += [f"<details><summary>💡 {label}</summary>", "", hint, "", "</details>", ""]
+                if td.get("test"):
+                    out += [f"**{t['check']}:**", "```bash", td["test"], "```", ""]
+    else:
+        if g.get("try_it"):
+            out += [f"{h}# {t['try_it']}", *_list(g["try_it"], True), ""]
+        if g.get("milestone"):
+            m = g["milestone"]
+            out += [f"{h}# {t['milestone']}", *(_list(m, True) if isinstance(m, list) else [m]), ""]
+        if g.get("troubleshooting"):
+            out += [f"{h}# {t['trouble']}", f"| {t['symptom']} | {t['fix']} |", "|---|---|",
+                    *["| " + _pipe(a) + " | " + _pipe(b) + " |" for a, b in g["troubleshooting"]], ""]
+        if g.get("done_when"):
+            out += [f"{h}# {t['done']}", *[f"- [ ] {x}" for x in g["done_when"]], ""]
+        if g.get("capstone"):
+            c = g["capstone"]
+            out += [f"{h}# {t['capstone']}", ""]
+            if isinstance(c, dict):
+                L = CAP_LABELS[lang]
+                if c.get("intro"):
+                    out += [c["intro"], ""]
+                for d in c.get("deliverables", {}).values():
+                    out += [f"{h}## {d['title']}", "", f"**{L['where']}:** {d['where']}", "", *_list(d.get("steps", []), True), ""]
+                    if d.get("template"):
+                        out += [f"<details><summary>📄 {L['template']}</summary>", "", d["template"], "", "</details>", ""]
+                    if d.get("pitfall"):
+                        out += [f"> ⚠️ {d['pitfall']}", ""]
+                if c.get("demo"):
+                    out += [f"{h}## {L['demo']}", *_list(c["demo"], True), ""]
+                if c.get("done_when"):
+                    out += [f"{h}## {L['done']}", *[f"- [ ] {x}" for x in c["done_when"]], ""]
+            else:
+                out += [*(_list(c, True) if isinstance(c, list) else [c]), ""]
+    return out
+
 ROOT = Path(__file__).resolve().parents[1]
 T = {
     "es": dict(goal="Objetivo", concepts="Conceptos", todo="Lo que implementas", file="Fichero", what="Qué", run="Ejecuta",
@@ -44,7 +136,8 @@ def lab_md(lab: dict, lang: str, level: int = 1, nav: bool = True) -> str:
         out += [f"| {tid} | `forja/{f}` | {es if lang == 'es' else en} |" for tid, f, es, en in lab["todos"]]
     else:
         out.append(t["none"])
-    out += ["", f"{h}# {t['run']}", "```bash", lab["steps"][k] or lab["steps"][0], "```", "", f"{h}# {t['check']}", lab["checkpoint"][k], "",
+    out += ["", *guide_md(lab["id"], lang, h, "top")]
+    out += [f"{h}# {t['run']}", "```bash", lab["steps"][k] or lab["steps"][0], "```", "", *guide_md(lab["id"], lang, h, "bottom"), f"{h}# {t['check']}", lab["checkpoint"][k], "",
             f"{h}# {t['chal']}", *[f"{n}. {c}" for n, c in enumerate(lab["challenges"][k], 1)], ""]
     if lab["test"]:
         out += [f"**{t['test']}:** `tests/{lab['test']}` · **{t['behind']}** `python scripts/tasks.py catchup {int(lab['id']) + 1:02d}`"

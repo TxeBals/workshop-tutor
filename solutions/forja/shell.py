@@ -51,7 +51,7 @@ def make_shell_tool(ws: Workspace, default_timeout: int = 120) -> Tool:
         """
         timeout = max(1, min(int(timeout), 600))
         try:
-            p = subprocess.run(command, shell=True, cwd=ws.root, capture_output=True, text=True, timeout=timeout,
+            p = subprocess.run(command, shell=True, cwd=ws.root, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout,
                                env=clean_env(), stdin=subprocess.DEVNULL)
         except subprocess.TimeoutExpired as e:
             partial = (e.stdout or "") + (e.stderr or "") if isinstance(e.stdout, str) else ""

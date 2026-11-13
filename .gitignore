@@ -6,3 +6,5 @@ out/
 .catchup_backup/
 playground/.forja/
 .forja/sessions/
+*.egg-info/
+~$*

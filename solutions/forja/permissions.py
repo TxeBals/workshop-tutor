@@ -83,7 +83,7 @@ def decide(tool: Tool, args: dict[str, Any], mode: Mode, allow: list[str], deny:
 # ---- TODO 04.5 (starter): suggest a rule for "always approve" --------------------------
 def suggest_rule(tool: Tool, args: dict[str, Any]) -> str:
     """When the answer is 'always', we save a sensible rule, not the literal command:
-    bash `pytest -q tests/x.py` -> `bash(pytest *)`; edit_file -> `edit_file`."""
+    bash `pytest -q tests/x.py` -> `bash(pytest*)`; edit_file -> `edit_file`."""
     if tool.name == "bash":
         try:
             words = shlex.split(args.get("command", ""))

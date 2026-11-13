@@ -77,7 +77,16 @@ def make_task_tool(llm: ChatModel, parent_tools: ToolRegistry, profiles: dict[st
             raise ValueError(f"unknown subagent: {subagent_type}. Available: {', '.join(profiles)}")
         # A subagent can never launch subagents (avoids recursion) and only sees its own tools.
         sub_tools = parent_tools.subset([t for t in prof.tools if t != "task"])
-        agent = Agent(llm, sub_tools, execute=execute, max_steps=prof.max_steps,
+        run = execute or sub_tools.execute
+
+        def sub_execute(call: ToolCall) -> ToolResult:
+            # The model may call a tool it wasn't offered: enforce the profile, not just the schema list.
+            if call.name not in sub_tools.tools:
+                return ToolResult(call.id, call.name, False, f"ERROR: tool '{call.name}' is not available to subagent '{prof.name}'. "
+                                  f"Available: {', '.join(sub_tools.tools)}")
+            return run(call)
+
+        agent = Agent(llm, sub_tools, execute=sub_execute, max_steps=prof.max_steps,
                       events=events_factory(prof.name) if events_factory else Events())
         messages = [{"role": "system", "content": prof.system}, {"role": "user", "content": prompt}]
         res = agent.run(messages)

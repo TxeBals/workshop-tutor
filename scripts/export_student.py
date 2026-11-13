@@ -38,6 +38,7 @@ playground/.forja/
 .forja/sessions/
 forja-solutions.zip
 solutions/
+*.egg-info/
 """
 
 MAKEFILE = """# Shortcuts for Linux/macOS. On Windows: python scripts/tasks.py <task>

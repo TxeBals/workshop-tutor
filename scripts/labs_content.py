@@ -94,10 +94,10 @@ forja                             # already a streaming chat (no tools yet)"""),
                ("02.6", "fs_tools.py", "grep: búsqueda por regex en el workspace", "grep: regex search across the workspace")],
         steps=("""python scripts/tasks.py test 02
 forja --cwd playground
-> ¿qué hace la función due_date?        (aún no hay bucle: verás la primera tool call)""",
+> ¿qué hace la función due_date?        (aún sin bucle: responde como un chat; las tools llegan en el lab 03)""",
                """python scripts/tasks.py test 02
 forja --cwd playground
-> what does the due_date function do?        (no loop yet: you'll see the first tool call)"""),
+> what does the due_date function do?        (no loop yet: it answers as a chat; tools arrive in lab 03)"""),
         checkpoint=("Tests del lab 02 en verde. Con el lab 03 todavía pendiente, Forja sigue siendo un chat: el bucle llega a continuación.",
                     "Lab 02 tests green. With lab 03 still pending, Forja is still a chat: the loop comes next."),
         challenges=(["Añade una tool `list_dir` con árbol de 2 niveles. ¿Mejora o empeora la exploración del modelo?",
@@ -165,8 +165,8 @@ forja --cwd playground
                """python scripts/tasks.py test 04
 forja --cwd playground
 > run the tests and tell me which ones fail"""),
-        checkpoint=("Forja pide permiso antes de `python -m pytest`; con *a* (siempre) deja de preguntar en la sesión. Intenta `sudo` o `rm -rf /`: denegado por política.",
-                    "Forja asks before `python -m pytest`; with *a* (always) it stops asking for the session. Try `sudo` or `rm -rf /`: denied by policy."),
+        checkpoint=("Forja pide permiso antes de `python -m pytest`; (la opción *a* = siempre llega con la CLI del lab 05). Intenta `sudo` o `rm -rf /`: denegado por política.",
+                    "Forja asks before `python -m pytest`; (the *a* = always option arrives with the lab 05 CLI). Try `sudo` or `rm -rf /`: denied by policy."),
         challenges=(["Añade una regla deny para `git push` y pide al agente que haga push.", "Windows: ¿qué cambia si la shell es cmd.exe? Prueba a pedir `ls`."],
                     ["Add a deny rule for `git push` and ask the agent to push.", "Windows: what changes when the shell is cmd.exe? Try asking for `ls`."]),
         test="test_l04_bash_permissions.py",
@@ -426,11 +426,13 @@ forja --cwd playground --resume <id>"""),
         steps=("""python scripts/tasks.py test 12
 python scripts/tasks.py evals --only fix_rounding
 python scripts/tasks.py evals --repeat 3
-python scripts/tasks.py evals --model qwen3-coder:30b --repeat 3""",
+python scripts/tasks.py evals --model qwen3-coder:30b --repeat 3
+python scripts/tasks.py evals --repeat 3 --config playground/.forja --label config   # con tus hooks, skills y subagentes""",
                """python scripts/tasks.py test 12
 python scripts/tasks.py evals --only fix_rounding
 python scripts/tasks.py evals --repeat 3
-python scripts/tasks.py evals --model qwen3-coder:30b --repeat 3"""),
+python scripts/tasks.py evals --model qwen3-coder:30b --repeat 3
+python scripts/tasks.py evals --repeat 3 --config playground/.forja --label config   # with your hooks, skills and subagents"""),
         checkpoint=("Tienes un informe en `out/` y puedes decir, con números, qué modelo usarías y para qué tareas.",
                     "You have a report in `out/` and can say, with numbers, which model you'd use for which tasks."),
         challenges=(["Añade una tarea propia a `evals/tasks.yaml`.", "Compara tu harness con y sin `todo_write` en el prompt base."],
