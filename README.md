@@ -57,7 +57,7 @@ forja-workshop/
 │   ├── alumno/         cuaderno_alumno.md                    ← alumno (ES)
 │   ├── student/        student_workbook.md                   ← student (EN)
 │   ├── checklist_setup.md · setup_checklist.md · hardware.png
-├── labs/L00…L12/       README.md (ES) · README.en.md (EN)
+├── labs/L00…L12/       README.md (ES) · README.en.md (EN) · solution/ (implementación del lab, solo tutor)
 ├── forja/              código del alumno con TODOs  / student code with TODOs
 ├── solutions/forja/    implementación de referencia / reference implementation
 ├── tests/              test_lNN_*.py  (offline, FakeLLM)

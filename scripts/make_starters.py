@@ -131,6 +131,25 @@ def main() -> None:
         src = src.replace("(starter)", "")
         p.write_text(src, encoding="utf-8")
     print(f"starters generated in {DST}")
+    copy_lab_solutions()
+
+
+def copy_lab_solutions() -> None:
+    """(Tutor) Copies each lab's reference implementation into labs/LNN_*/solution/.
+    Tutor repo only: export_student.py copies just README.en.md from each lab."""
+    import sys
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from catchup import LAB_FILES  # noqa: E402
+
+    for lab, files in LAB_FILES.items():
+        folder = next((ROOT / "labs").glob(f"L{lab}_*"))
+        out = folder / "solution"
+        if out.exists():
+            shutil.rmtree(out)
+        out.mkdir()
+        for f in files:
+            shutil.copy2(SRC / f, out / f)
+    print("lab solutions copied to labs/LNN_*/solution/")
 
 
 def _lineno(src: str, qualname: str) -> int:
